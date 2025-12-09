@@ -17,7 +17,8 @@ Design choices:
   -- Agentic worklows (we generate prompts randomly which means that successive prompts might not have the same prefix)
 - Uses sensible defaults sourced from the internet (eg 512 for prompt-len similar to llm-perf)
 - For a batch, we take metrics batch_generation_time as the max of the generation_times for all the prompts in the batch, even though some might terminate early.
-- Did not handle concurrent requests - I saw that as commandline param in aiperf and llmperf.
+- Did not handle concurrent requests - I saw that as commandline param in aiperf and llmperf. (I think that uses vllm AsyncLLMEngine or concurrency inside SamplingParams)
+- Used default values for many params (eg tensor_parallel_size and gpu_memory_utilization) from the vLLM wiki
 
 
 ## Repro (via Lambda Labs GPU)
