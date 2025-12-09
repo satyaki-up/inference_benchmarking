@@ -96,6 +96,6 @@ def synthetic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev
     prompts = []
     for _ in range(batch_size):
         prompt_len = max(1, int(random.gauss(prompt_len_mean, prompt_len_stddev)))
-        prompts.append(base[:prompt_len * 4])
+        prompts.append(base[:prompt_len * 4]) # assume 4 chars per token
     return prompts
 

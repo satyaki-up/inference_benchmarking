@@ -55,7 +55,7 @@ def run_single_config(
         t_prefill_end = time.time()
         batch_prefill_time = t_prefill_end - t_prefill_start
         
-        # Second call: get total time and actual outputs
+        # Second call: get total time
         t0 = time.time()
         outputs = llm.generate(prompts, sampling_params)
         t1 = time.time()

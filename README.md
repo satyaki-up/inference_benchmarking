@@ -8,13 +8,17 @@ Design choices:
 - Uses normal distributions (mean, stddev) for prompt and output token lengths rather than fixed values, providing more realistic variation
 - Estimates distributions from 3 popular HuggingFace datasets: chat (Open-Orca), code (Muennighoff/mbpp), and math/science (HuggingFaceH4/MATH-500)
 - Separates cost analysis for prefill (input tokens) and generation (output tokens) phases
+- Estimate prefill and total time first, then subtract to get generation time
+  -- [PREFERRED] benchmark_vllm_simulate.py calls the LLM with max_output_token=1 and uses that as proxy for prefill time instead of looking at metrics.time_to_first_token
+  -- benchmark_vllm_use_metric.py uses metrics.time_to_first_token inside vllm output to get TTFT as a proxy for prefill time (got errors for this on my GPU - always empty)
 - Ignores
   -- Reasoning vs non-reasoning tokens
   -- Tool use
   -- Agentic worklows (we generate prompts randomly which means that successive prompts might not have the same prefix)
 - Uses sensible defaults sourced from the internet (eg 512 for prompt-len similar to llm-perf)
 - For a batch, we take metrics batch_generation_time as the max of the generation_times for all the prompts in the batch, even though some might terminate early.
--  Did not handle concurrent requests - I saw that as commandline param in aiperf and llmperf.
+- Did not handle concurrent requests - I saw that as commandline param in aiperf and llmperf.
+
 
 ## Repro (via Lambda Labs GPU)
 
@@ -28,7 +32,7 @@ uv pip install datasets transformers torch accelerate
 uv pip install vllm --torch-backend=auto
 git clone https://github.com/satyaki-up/inference_benchmarking
 cd inference_benchmarking/
-python benchmark_vllm.py
+python benchmark_vllm_simulate.py
 ```
 
 [Repro on youtube](https://www.youtube.com/watch?v=TIMWmMeE5Co)
