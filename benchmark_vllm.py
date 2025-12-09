@@ -27,7 +27,7 @@ def estimate_prompt_len(model_name: str) -> Tuple[float, float]:
     
     datasets_config = [
         ("Open-Orca/OpenOrca", "question"),  # Chat dataset
-        ("bigcode/python_code", "content"),  # Code dataset
+        ("Muennighoff/mbpp", "content"),  # Code dataset
         ("lighteval/MATH", "problem"),  # Math/Science dataset
     ]
     
@@ -59,7 +59,7 @@ def estimate_output_len(model_name: str) -> Tuple[float, float]:
     
     datasets_config = [
         ("Open-Orca/OpenOrca", "response"),  # Chat dataset
-        ("bigcode/python_code", "content"),  # Code dataset (use same field as prompt)
+        ("Muennighoff/mbpp", "content"),  # Code dataset 
         ("lighteval/MATH", "solution"),  # Math/Science dataset
     ]
     
@@ -127,24 +127,57 @@ def run_single_config(
         total_input_tokens += len(tokenizer.encode(prompt))
 
     start_overall = time.time()
-    for _ in range(num_batches):
+    metrics_available = None  # Track if we've checked metrics availability
+    for batch_idx in range(num_batches):
         t0 = time.time()
         outputs = llm.generate(prompts, sampling_params)
         t1 = time.time()
-        latencies.append(t1 - t0)
+        batch_latency = t1 - t0
+        latencies.append(batch_latency)
 
         batch_prefill_time = 0.0
         batch_generation_time = 0.0
+        
+        # Check metrics availability on first batch
+        if metrics_available is None and len(outputs) > 0:
+            has_metrics_attr = hasattr(outputs[0], 'metrics')
+            metrics_obj = getattr(outputs[0], 'metrics', None) if has_metrics_attr else None
+            if has_metrics_attr and metrics_obj:
+                time_to_first_token = getattr(metrics_obj, 'time_to_first_token', None)
+                metrics_available = time_to_first_token is not None
+            else:
+                metrics_available = False
+            
+            if not metrics_available:
+                print(f"Warning: vLLM metrics not available. Has metrics attr: {has_metrics_attr}, "
+                      f"metrics object: {metrics_obj}")
+                if has_metrics_attr and metrics_obj:
+                    print(f"  Available metrics attributes: {dir(metrics_obj)}")
         
         for out in outputs:
             output_tokens = len(out.outputs[0].token_ids)
             total_output_tokens += output_tokens
             
             if hasattr(out, 'metrics') and out.metrics:
-                time_to_first_token = out.metrics.time_to_first_token
+                time_to_first_token = getattr(out.metrics, 'time_to_first_token', None)
                 if time_to_first_token is not None:
                     batch_prefill_time = max(batch_prefill_time, time_to_first_token)
-                    batch_generation_time = max(batch_generation_time, (t1 - t0) - time_to_first_token)
+                    batch_generation_time = max(batch_generation_time, batch_latency - time_to_first_token)
+        
+        # Fallback: if metrics not available, estimate prefill time from batch latency
+        # This is a rough estimate assuming prefill takes a portion of total time
+        if batch_prefill_time == 0.0 and not metrics_available:
+            # Rough heuristic: prefill typically takes 20-40% of total time for longer sequences
+            # We'll use a conservative estimate based on input token count
+            avg_input_tokens = total_input_tokens / batch_size
+            # Estimate: prefill time scales with input length, generation with output length
+            # For a rough split, assume prefill is proportional to input/(input+output)
+            if len(outputs) > 0:
+                batch_output_tokens = sum(len(out.outputs[0].token_ids) for out in outputs)
+                avg_output_tokens = batch_output_tokens / len(outputs)
+                total_tokens_ratio = avg_input_tokens / (avg_input_tokens + avg_output_tokens) if (avg_input_tokens + avg_output_tokens) > 0 else 0.3
+                batch_prefill_time = batch_latency * total_tokens_ratio
+                batch_generation_time = batch_latency * (1 - total_tokens_ratio)
         
         if batch_prefill_time > 0:
             prefill_times.append(batch_prefill_time)

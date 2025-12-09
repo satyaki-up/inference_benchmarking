@@ -14,46 +14,21 @@ Design choices:
   -- Agentic worklows (we generate prompts randomly which means that successive prompts might not have the same prefix)
 - Uses sensible defaults sourced from the internet (eg 512 for prompt-len similar to llm-perf)
 - For a batch, we take metrics batch_generation_time as the max of the generation_times for all the prompts in the batch, even though some might terminate early.
+-  Did not handle concurrent requests - I saw that as commandline param in aiperf and llmperf.
 
-## Prerequisites (Ubuntu Server Setup)
+## Repro (via Lambda Labs GPU)
 
-For rented GPU instances, first ensure Python 3.12+ and pip are installed:
-
-```bash
-sudo apt update
-sudo apt install -y python3.12 python3.12-venv python3-pip
-```
-
-Verify installation:
-```bash
-python3 --version  # Should be 3.12 or higher
-pip3 --version
-```
-
-## Setup
+Get an A10 and A100 instance. Be sure to pick the Lambda Stack as the base image because that has Python installed, and you get the Cloud IDE (via the Terminal). Can also view the attached video.
 
 ```bash
-pip install datasets transformers torch accelerate
-pip install vllm --torch-backend=auto
-pip install huggingface_hub
-```
-
-Login to HuggingFace (required for some datasets):
-```bash
-huggingface-cli login
-```
-
-You'll need a HuggingFace account and access token. Get your token from https://huggingface.co/settings/tokens
-
-## Usage
-
-```bash
-python benchmark_vllm.py --model <model-id> --gpu-price <price>
-```
-
-Example:
-```bash
-python benchmark_vllm.py --model meta-llama/Meta-Llama-3-8B-Instruct --gpu-price 2.5
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv --python 3.12 --seed
+source .venv/bin/activate
+uv pip install datasets transformers torch accelerate
+uv pip install vllm --torch-backend=auto
+git clone https://github.com/satyaki-up/inference_benchmarking
+cd inference_benchmarking/
+python benchmark_vllm.py
 ```
 
 ## Arguments
