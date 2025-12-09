@@ -6,7 +6,7 @@ Benchmark LLM inference performance with vLLM across different batch sizes. Auto
 
 Design choices:
 - Uses normal distributions (mean, stddev) for prompt and output token lengths rather than fixed values, providing more realistic variation
-- Estimates distributions from 3 popular HuggingFace datasets: chat (Open-Orca), code (bigcode/python_code), and math/science (lighteval/MATH)
+- Estimates distributions from 3 popular HuggingFace datasets: chat (Open-Orca), code (Muennighoff/mbpp), and math/science (HuggingFaceH4/MATH-500)
 - Separates cost analysis for prefill (input tokens) and generation (output tokens) phases
 - Ignores
   -- Reasoning vs non-reasoning tokens
@@ -18,7 +18,7 @@ Design choices:
 
 ## Repro (via Lambda Labs GPU)
 
-Get an A10 and A100 instance. Be sure to pick the Lambda Stack as the base image because that has Python installed, and you get the Cloud IDE (via the Terminal). Can also view the attached video.
+Get an A10 or A100 instance. Be sure to pick the Lambda Stack as the base image because that has Python installed, and you get the Cloud IDE (via the Terminal). Can also view the youtube video below.
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -31,11 +31,13 @@ cd inference_benchmarking/
 python benchmark_vllm.py
 ```
 
+[Repro on youtube](https://www.youtube.com/watch?v=TIMWmMeE5Co)
+
 ## Arguments
 
 - `--model`: HuggingFace model ID (required)
 - `--gpu-price`: GPU price per hour in USD (required)
-- `--batch-sizes`: Comma-separated batch sizes (default: "8,16,32,64,128")
+- `--batch-sizes`: Comma-separated batch sizes (default: "4,8,16,32,64,128")
 - `--num-batches`: Number of batches to run (default: 20)
 
 ## Features
@@ -47,6 +49,4 @@ python benchmark_vllm.py
 ## Output
 
 Reports tokens/second, requests/second, p50/p95 latency, and cost per million tokens for each batch size. Includes separate metrics for prefill and generation phases with individual cost breakdowns.
-
-![Mac](https://i.ibb.co/whDcVLBG/Screenshot-2025-12-09-at-11-26-12.png)
 
