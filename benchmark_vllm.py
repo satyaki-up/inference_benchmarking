@@ -111,6 +111,8 @@ def run_single_config(
         top_p=1.0,
     )
 
+    # GPU warmup: First inference can be slower due to CUDA kernel compilation, memory allocation, and other one-time setup.
+    # We run a dummy inference to warm up the GPU. Excludes cold-start overhead from benchmark measurements.
     _ = llm.generate(prompts, sampling_params)
 
     latencies = []
@@ -191,14 +193,12 @@ def cost_per_million_tokens(gpu_price_per_hour: float, tokens_per_second: float)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True,
-                        help="HF model ID, e.g. meta-llama/Meta-Llama-3-8B-Instruct")
-    parser.add_argument("--gpu-price", type=float, required=True,
-                        help="GPU price per hour in USD, e.g. 2.5")
+    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-0.5B",
+                        help="HF model ID (default: Qwen/Qwen2.5-0.5B)")
+    parser.add_argument("--gpu-price", type=float, default=2.0,
+                        help="GPU price per hour in USD (default: 2.0)")
     parser.add_argument("--batch-sizes", type=str, default="8,16,32,64,128")
     parser.add_argument("--num-batches", type=int, default=20)
-    parser.add_argument("--max-p95-latency", type=float, default=10.0,
-                        help="Max acceptable p95 latency per batch in seconds")
     args = parser.parse_args()
 
     batch_sizes = [int(x) for x in args.batch_sizes.split(",") if x]
