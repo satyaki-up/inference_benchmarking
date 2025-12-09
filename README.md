@@ -73,5 +73,5 @@ python benchmark_vllm.py --model meta-llama/Meta-Llama-3-8B-Instruct --gpu-price
 
 Reports tokens/second, requests/second, p50/p95 latency, and cost per million tokens for each batch size. Includes separate metrics for prefill and generation phases with individual cost breakdowns.
 
-![Mac](https://ibb.co/r2ndYtF8)
+![Mac](https://i.ibb.co/whDcVLBG/Screenshot-2025-12-09-at-11-26-12.png)
 
