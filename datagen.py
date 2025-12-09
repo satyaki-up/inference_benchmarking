@@ -99,3 +99,40 @@ def synthetic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev
         prompts.append(base[:prompt_len * 4]) # assume 4 chars per token
     return prompts
 
+
+def agentic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev: float) -> List[str]:
+    """
+    Generate agentic prompts where each group of 5 prompts forms a trajectory.
+    In a trajectory, each prompt is a prefix of the next one.
+    """
+    base = "You are a helpful assistant. " + ("Please respond succinctly. " * 50)
+    prompts = []
+    trajectory_size = 5
+    num_trajectories = (batch_size + trajectory_size - 1) // trajectory_size
+    
+    for _ in range(num_trajectories):
+        # Generate base prompt for this trajectory
+        base_prompt_len = max(1, int(random.gauss(prompt_len_mean, prompt_len_stddev)))
+        current_prompt = base[:base_prompt_len * 4]
+        
+        # Generate prompts in this trajectory (up to 5, or remaining if last trajectory)
+        prompts_in_traj = min(trajectory_size, batch_size - len(prompts))
+        for i in range(prompts_in_traj):
+            prompts.append(current_prompt)
+            
+            # Generate suffix for next prompt (if not last in trajectory)
+            if i < prompts_in_traj - 1:
+                # Generate suffix length using mean/stddev (suffix is typically smaller)
+                suffix_token_len = max(1, int(random.gauss(prompt_len_mean * 0.2, prompt_len_stddev * 0.2)))
+                suffix_char_len = suffix_token_len * 4
+                
+                # Create random suffix from base text starting after current prompt
+                start_idx = len(current_prompt)
+                end_idx = min(len(base), start_idx + suffix_char_len)
+                suffix = base[start_idx:end_idx]
+                
+                # Append suffix to current prompt for next iteration
+                current_prompt = current_prompt + suffix
+    
+    return prompts
+
