@@ -49,10 +49,10 @@ def estimate_prompt_len(model_name: str) -> Tuple[float, float]:
                 all_prompt_lengths.append(prompt_tokens)
     
     if not all_prompt_lengths:
-        return (512.0, 100.0)
+        return (1024.0, 200.0)
     
     prompt_mean = mean(all_prompt_lengths)
-    prompt_stddev = stdev(all_prompt_lengths) if len(all_prompt_lengths) > 1 else 100.0
+    prompt_stddev = stdev(all_prompt_lengths) if len(all_prompt_lengths) > 1 else 200.0
     
     print(f"Estimated prompt length: mean={prompt_mean:.1f}, stddev={prompt_stddev:.1f} tokens for dataset {dataset_name}")
     return (prompt_mean, prompt_stddev)
@@ -82,10 +82,10 @@ def estimate_output_len(model_name: str) -> Tuple[float, float]:
                 all_output_lengths.append(output_tokens)
     
     if not all_output_lengths:
-        return (256.0, 50.0)
+        return (512.0, 100.0)
     
     output_mean = mean(all_output_lengths)
-    output_stddev = stdev(all_output_lengths) if len(all_output_lengths) > 1 else 50.0
+    output_stddev = stdev(all_output_lengths) if len(all_output_lengths) > 1 else 100.0
     
     print(f"Estimated output length: mean={output_mean:.1f}, stddev={output_stddev:.1f} tokens for dataset {dataset_name}")
     return (output_mean, output_stddev)
