@@ -118,7 +118,7 @@ def main():
                         help="HF model ID (default: Qwen/Qwen2.5-0.5B)")
     parser.add_argument("--gpu-price", type=float, default=2.0,
                         help="GPU price per hour in USD (default: 2.0)")
-    parser.add_argument("--batch-sizes", type=str, default="8,16,32,64,128")
+    parser.add_argument("--batch-sizes", type=str, default="8,16,32,64,128,256,512,1024")
     parser.add_argument("--num-batches", type=int, default=20)
     args = parser.parse_args()
 

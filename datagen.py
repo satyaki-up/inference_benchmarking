@@ -100,23 +100,53 @@ def synthetic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev
     return prompts
 
 
-def agentic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev: float) -> List[str]:
+def agentic_prompts(
+    batch_size: int, 
+    prompt_len_mean: float, 
+    prompt_len_stddev: float,
+    include_tool_usage: bool = True,
+    tool_usage_probability: float = 0.6,
+) -> List[str]:
     """
     Generate agentic prompts where each group of 5 prompts forms a trajectory.
     In a trajectory, each prompt is a prefix of the next one.
+    Can optionally simulate tool usage by inserting tool calls and results.
     """
     base = "You are a helpful assistant. " + ("Please respond succinctly. " * 50)
     prompts = []
     trajectory_size = 5
     num_trajectories = (batch_size + trajectory_size - 1) // trajectory_size
     
+    tool_calls = [
+        '{"name": "get_weather", "arguments": {"location": "Paris"}}',
+        '{"name": "search_web", "arguments": {"query": "latest news"}}',
+        '{"name": "calculate", "arguments": {"expression": "2+2"}}',
+        '{"name": "get_stock_price", "arguments": {"symbol": "AAPL"}}',
+        '{"name": "send_email", "arguments": {"to": "user@example.com", "subject": "Update"}}',
+        '{"name": "query_database", "arguments": {"table": "users", "filter": "active"}}',
+    ]
+    
+    tool_results = [
+        '{"temperature": 22, "condition": "sunny", "humidity": 65}',
+        '{"results": ["News article 1", "News article 2"], "count": 2}',
+        '{"result": 4, "steps": ["2+2=4"]}',
+        '{"price": 150.25, "change": 2.5, "percent_change": 1.69}',
+        '{"status": "sent", "message_id": "msg_12345"}',
+        '{"rows": [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}], "count": 2}',
+    ]
+    
     for _ in range(num_trajectories):
+        use_tools = include_tool_usage and random.random() < tool_usage_probability
+        
         # Generate base prompt for this trajectory
         base_prompt_len = max(1, int(random.gauss(prompt_len_mean, prompt_len_stddev)))
         current_prompt = base[:base_prompt_len * 4]
         
         # Generate prompts in this trajectory (up to 5, or remaining if last trajectory)
         prompts_in_traj = min(trajectory_size, batch_size - len(prompts))
+        tool_call_inserted = False
+        tool_result_inserted = False
+        
         for i in range(prompts_in_traj):
             prompts.append(current_prompt)
             
@@ -130,6 +160,20 @@ def agentic_prompts(batch_size: int, prompt_len_mean: float, prompt_len_stddev: 
                 start_idx = len(current_prompt)
                 end_idx = min(len(base), start_idx + suffix_char_len)
                 suffix = base[start_idx:end_idx]
+                
+                # If using tools, insert tool usage patterns at appropriate points
+                if use_tools:
+                    # Insert tool call
+                    if not tool_call_inserted and i < prompts_in_traj - 2 and i >= 0:
+                        tool_call = random.choice(tool_calls)
+                        # Add assistant response and tool call
+                        suffix = suffix + f"\n\nAssistant: I'll use a tool to help with this.\nTool call: {tool_call}"
+                        tool_call_inserted = True
+                    # Insert tool result after tool call
+                    elif tool_call_inserted and not tool_result_inserted and i < prompts_in_traj - 1:
+                        tool_result = random.choice(tool_results)
+                        suffix = suffix + f"\nTool result: {tool_result}\nAssistant: Based on the tool result, "
+                        tool_result_inserted = True
                 
                 # Append suffix to current prompt for next iteration
                 current_prompt = current_prompt + suffix

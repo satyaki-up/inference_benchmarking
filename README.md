@@ -42,7 +42,7 @@ python benchmark_vllm_simulate.py
 
 - `--model`: HuggingFace model ID (required)
 - `--gpu-price`: GPU price per hour in USD (required)
-- `--batch-sizes`: Comma-separated batch sizes (default: "4,8,16,32,64,128")
+- `--batch-sizes`: Comma-separated batch sizes (default: "4,8,16,32,64,128,256,512,1024")
 - `--num-batches`: Number of batches to run (default: 20)
 
 ## Features
