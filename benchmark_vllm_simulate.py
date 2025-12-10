@@ -77,7 +77,7 @@ def run_single_config(
         
         if batch_cached_tokens:
             avg_cached_tokens = sum(batch_cached_tokens) / len(batch_cached_tokens)
-            print(f"  Batch {batch_idx + 1}: avg cached tokens = {avg_cached_tokens:.1f}")
+            print(f"  Batch {batch_idx + 1}: avg num_cached_tokens = {avg_cached_tokens:.1f}")
         
         prefill_times.append(batch_prefill_time)
         generation_times.append(batch_generation_time)
@@ -177,6 +177,30 @@ def main():
 
         print(
             f"bs={bs} | tps={res['tokens_per_second']:.1f} tok/s | "
+            f"rps={res['requests_per_second']:.2f} req/s | "
+            f"p50={res['p50_latency']:.3f}s | p95={res['p95_latency']:.3f}s"
+        )
+        print(
+            f"  Prefill: {res['prefill_tokens_per_second']:.1f} tok/s | "
+            f"$/{1_000_000} input={price_per_million_input:.4f}"
+        )
+        print(
+            f"  Generation: {res['generation_tokens_per_second']:.1f} tok/s | "
+            f"$/{1_000_000} output={price_per_million_output:.4f}"
+        )
+    
+    # Print summary at the end
+    print("\n" + "="*80)
+    print("SUMMARY")
+    print("="*80)
+    for res in results:
+        bs = res["batch_size"]
+        price_per_million_input = res["usd_per_million_input_tokens"]
+        price_per_million_output = res["usd_per_million_output_tokens"]
+        
+        print(f"\nbatch_size={bs}")
+        print(
+            f"  bs={bs} | tps={res['tokens_per_second']:.1f} tok/s | "
             f"rps={res['requests_per_second']:.2f} req/s | "
             f"p50={res['p50_latency']:.3f}s | p95={res['p95_latency']:.3f}s"
         )
