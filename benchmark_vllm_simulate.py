@@ -65,9 +65,19 @@ def run_single_config(
         # Calculate generation time as total time minus prefill time
         batch_generation_time = batch_latency - batch_prefill_time
         
+        batch_cached_tokens = []
         for out in outputs:
             output_tokens = len(out.outputs[0].token_ids)
             total_output_tokens += output_tokens
+            
+            # Extract num_cached_tokens from vLLM response
+            num_cached = getattr(out, 'num_cached_tokens', None)
+            if num_cached is not None:
+                batch_cached_tokens.append(num_cached)
+        
+        if batch_cached_tokens:
+            avg_cached_tokens = sum(batch_cached_tokens) / len(batch_cached_tokens)
+            print(f"  Batch {batch_idx + 1}: avg cached tokens = {avg_cached_tokens:.1f}")
         
         prefill_times.append(batch_prefill_time)
         generation_times.append(batch_generation_time)

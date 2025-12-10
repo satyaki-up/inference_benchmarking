@@ -68,7 +68,7 @@ def run_single_config(
         for out in outputs:
             output_tokens = len(out.outputs[0].token_ids)
             total_output_tokens += output_tokens            
-            print(f"  out: {out}")
+            # print(f"  out: {out}")
         
         prefill_times.append(batch_prefill_time)
         generation_times.append(batch_generation_time)
