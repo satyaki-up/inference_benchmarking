@@ -37,6 +37,7 @@ python benchmark_vllm_simulate.py
 ```
 
 [Repro on youtube](https://www.youtube.com/watch?v=TIMWmMeE5Co)
+Check out sample output via the [promptstats file](https://github.com/satyaki-up/inference_benchmarking/blob/main/promptstats.png).
 
 ## Arguments
 
